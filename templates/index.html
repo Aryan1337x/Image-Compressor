@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVD Image Compression</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>SVD Image Compression</h1>
+            <div class="subtitle">Linear Algebra in Action</div>
+        </header>
+
+        {% if error %}
+        <div class="error-message">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <div class="glass-panel">
+            <form action="/" method="post" enctype="multipart/form-data" class="upload-form">
+                <div class="file-input-wrapper">
+                    <span class="upload-icon">📁</span>
+                    <span>Drop your image here or click to browse</span>
+                    <input type="file" name="file" accept=".jpg,.jpeg,.png" required
+                        onchange="this.previousElementSibling.textContent = this.files[0].name">
+                </div>
+
+                <div class="range-wrapper">
+                    <div class="range-header">
+                        <span>Rank (k) Approximation</span>
+                        <span id="k-value-display">{{ k_value or 50 }}</span>
+                    </div>
+                    <input type="range" name="k" min="1" max="200" value="{{ k_value or 50 }}"
+                        oninput="document.getElementById('k-value-display').innerText = this.value">
+                    <div
+                        style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.75rem; line-height: 1.5; text-align: center; background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 0.25rem;">
+                        <strong>What is k?</strong> 'k' controls the amount of detail kept. <br>
+                        Low k = General shapes only (Small Size). <br>
+                        High k = Fine details included (Better Quality).
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary">Compress Image</button>
+            </form>
+        </div>
+
+        {% if stats %}
+        <div class="glass-panel">
+            <div class="results-grid">
+                <!-- Original -->
+                <div class="image-card">
+                    <div class="image-header">
+                        <h3>Original</h3>
+                        <span class="badge">{{ stats.original_size_str }}</span>
+                    </div>
+                    <div class="img-container">
+                        <img src="{{ original_image }}" alt="Original Image">
+                    </div>
+                </div>
+
+                <!-- Compressed -->
+                <div class="image-card">
+                    <div class="image-header">
+                        <h3>Compressed (k={{ stats.k }})</h3>
+                        <span class="badge">{{ stats.compressed_size_str }}</span>
+                    </div>
+                    <div class="img-container">
+                        <img src="{{ compressed_image }}" alt="Compressed Image">
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">{{ stats.compression_percentage }}%</div>
+                    <div class="stat-label">File Size Reduction</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ stats.frobenius_error }}</div>
+                    <div class="stat-label">Frobenius Norm Error</div>
+                </div>
+                <!-- <div class="stat-item">
+                    <div class="stat-value">{{ stats.k }}</div>
+                    <div class="stat-label">Singular Values Used</div>
+                </div> -->
+            </div>
+        </div>
+        {% endif %}
+
+        <footer style="margin-top: 3rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+            Built with Flask, NumPy & Linear Algebra
+        </footer>
+    </div>
+</body>
+
+</html>
