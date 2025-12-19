@@ -103,13 +103,27 @@
                     <span class="metric-value discount">-{{ stats.compression_percentage }}%</span>
                 </div>
                 <div class="metric-card">
-                    <span class="metric-label">F-Norm Error</span>
-                    <span class="metric-value">{{ stats.frobenius_error }}</span>
+                    <span class="metric-label">Original</span>
+                    <span class="metric-value small">{{ stats.original_size_str }}</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Compressed</span>
+                    <span class="metric-value small highlight">{{ stats.compressed_size_str }}</span>
                 </div>
                 <div class="metric-card">
                     <span class="metric-label">Rank Used</span>
                     <span class="metric-value">k={{ stats.k }}</span>
                 </div>
+            </div>
+
+            <div class="action-row">
+                <a href="{{ compressed_image }}" download="compressed_image.jpg" class="btn-glow download-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-right: 8px;">
+                        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Download Result
+                </a>
             </div>
         </div>
         {% endif %}
@@ -135,6 +149,8 @@
         function updateKValue(val) {
             document.getElementById('k-value-display').innerText = val;
         }
+
+
     </script>
 </body>
 
