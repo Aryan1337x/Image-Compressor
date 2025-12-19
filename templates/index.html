@@ -49,18 +49,41 @@
                 <div class="control-group">
                     <div class="range-header">
                         <label>Compression Rank (k)</label>
-                        <span class="k-value-badge" id="k-value-display">{{ k_value or 50 }}</span>
+                        <span class="k-value-badge" id="k-value-display">{{ k_value if k_value != 'auto' else 'Auto'
+                            }}</span>
                     </div>
 
                     <div class="slider-container">
-                        <input type="range" name="k" min="5" max="200" value="{{ k_value or 50 }}"
-                            oninput="updateKValue(this.value)">
+                        <input type="range" name="k" id="k-slider" min="5" max="200"
+                            value="{{ k_value if k_value != 'auto' else 50 }}" oninput="updateKValue(this.value)">
                         <div class="slider-track-fill"></div>
+                    </div>
+
+                    <div class="checkbox-group"
+                        style="margin-top: 0.5rem; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" name="use_auto_k" id="auto-k-check" onchange="toggleAutoK(this)">
+                        <label for="auto-k-check" style="font-size: 0.9rem; cursor: pointer;">
+                            Auto-Detect Optimal Rank (95% Energy)
+                        </label>
                     </div>
 
                     <div class="info-pill">
                         <span class="info-icon">ℹ️</span>
                         <span>Start strictly at <strong>50</strong> for best balance</span>
+                    </div>
+                </div>
+
+                <div class="control-group" style="margin-top: 1rem;">
+                    <div class="range-header">
+                        <label>Export Format</label>
+                    </div>
+                    <div class="select-wrapper">
+                        <select name="format" class="format-select">
+                            <option value="jpg" {% if format=='jpg' %}selected{% endif %}>JPEG (Standard)</option>
+                            <option value="png" {% if format=='png' %}selected{% endif %}>PNG (Lossless)</option>
+                            <option value="webp" {% if format=='webp' %}selected{% endif %}>WebP (High Efficiency)
+                            </option>
+                        </select>
                     </div>
                 </div>
 
@@ -74,7 +97,6 @@
         {% if stats %}
         <div class="results-section glass-panel">
             <div class="comparison-grid">
-                <!-- Original -->
                 <div class="image-wrapper original">
                     <div class="image-header">
                         <span class="label">Input Source</span>
@@ -85,7 +107,6 @@
                     </div>
                 </div>
 
-                <!-- Compressed -->
                 <div class="image-wrapper compressed">
                     <div class="image-header">
                         <span class="label">SVD Output</span>
@@ -113,6 +134,10 @@
                 <div class="metric-card">
                     <span class="metric-label">Rank Used</span>
                     <span class="metric-value">k={{ stats.k }}</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Recommended</span>
+                    <span class="metric-value discount">k={{ stats.recommended_k }}</span>
                 </div>
             </div>
 
@@ -148,6 +173,27 @@
 
         function updateKValue(val) {
             document.getElementById('k-value-display').innerText = val;
+            // Uncheck auto if manual slider is moved
+            const autoCheck = document.getElementById('auto-k-check');
+            if (autoCheck.checked) {
+                autoCheck.checked = false;
+                toggleAutoK(autoCheck);
+            }
+        }
+
+        function toggleAutoK(checkbox) {
+            const slider = document.getElementById('k-slider');
+            const display = document.getElementById('k-value-display');
+
+            if (checkbox.checked) {
+                slider.disabled = true;
+                slider.style.opacity = '0.5';
+                display.innerText = "Auto";
+            } else {
+                slider.disabled = false;
+                slider.style.opacity = '1';
+                display.innerText = slider.value;
+            }
         }
 
 

@@ -17,10 +17,6 @@ app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 
 
 def cleanup_old_files(folder: str, age_limit: int = 1800):
-    """
-    Deletes files in the specified folder that are older than age_limit (in seconds).
-    Default age_limit is 1800 seconds (30 minutes).
-    """
     try:
         current_time = time.time()
         for filename in os.listdir(folder):
@@ -45,7 +41,6 @@ def format_size(size_bytes: int) -> str:
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # Trigger cleanup on each access (simple approach)
     cleanup_old_files(app.config['UPLOAD_FOLDER'])
     cleanup_old_files(app.config['OUTPUT_FOLDER'])
 
@@ -58,15 +53,25 @@ def index():
         if file.filename == '':
             return render_template('index.html', error='No selected file')
             
-        try:
-            k = int(request.form.get('k', 50))
-        except ValueError:
-            k = 50
+        use_auto_k = 'use_auto_k' in request.form
+        
+        if use_auto_k:
+            k = 'auto'
+        else:
+            try:
+                k = int(request.form.get('k', 50))
+            except ValueError:
+                k = 50
             
+        requested_format = request.form.get('format', 'jpg')
+        if requested_format not in ['jpg', 'png', 'webp']:
+            requested_format = 'jpg'
+
         filename, file_path = save_uploaded_file(file, app.config['UPLOAD_FOLDER'])
         
         if filename:
-            output_filename = f"compressed_k{k}_{filename}"
+            original_name_no_ext = os.path.splitext(filename)[0]
+            output_filename = f"compressed_k{k}_{original_name_no_ext}.{requested_format}"
             output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
             
             stats = compress_image(file_path, k, output_path)
@@ -79,13 +84,14 @@ def index():
                                        original_image=url_for('static', filename=f'uploads/{filename}'),
                                        compressed_image=url_for('static', filename=f'outputs/{output_filename}'),
                                        stats=stats,
-                                       k_value=k)
+                                       k_value=k,
+                                       format=requested_format)
             else:
                  return render_template('index.html', error='Error processing image')
         else:
             return render_template('index.html', error='File type not allowed')
 
-    return render_template('index.html', k_value=50)
+    return render_template('index.html', k_value=50, format='jpg')
 
 if __name__ == '__main__':
     app.run(debug=True)
