@@ -4,101 +4,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVD Image Compression</title>
+    <title>SVD Compression | Future of Image</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
+    <div class="background-mesh"></div>
+    <div class="overlay-noise"></div>
+
     <div class="container">
         <header>
-            <h1>SVD Image Compression</h1>
-            <div class="subtitle">Linear Algebra in Action</div>
+            <div class="logo-mark">SVD</div>
+            <h1>Image Compressor</h1>
+            <div class="subtitle">Singular Value Decomposition Engine</div>
         </header>
 
         {% if error %}
         <div class="error-message">
-            {{ error }}
+            <span class="error-icon">⚠️</span> {{ error }}
         </div>
         {% endif %}
 
-        <div class="glass-panel">
+        <div class="main-card glass-panel">
             <form action="/" method="post" enctype="multipart/form-data" class="upload-form">
-                <div class="file-input-wrapper">
-                    <span class="upload-icon">📁</span>
-                    <span>Drop your image here or click to browse</span>
-                    <input type="file" name="file" accept=".jpg,.jpeg,.png" required
-                        onchange="this.previousElementSibling.textContent = this.files[0].name">
+                <div class="file-drop-zone">
+                    <input type="file" name="file" accept=".jpg,.jpeg,.png,.webp,.bmp" required
+                        onchange="updateFileName(this)">
+                    <div class="drop-content">
+                        <div class="icon-circle">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" class="upload-svg">
+                                <path d="M12 4V16M12 4L8 8M12 4L16 8M4 20H20" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <span class="drop-text">Drag & drop or Click to Upload</span>
+                        <span class="file-name" id="file-name-display"></span>
+                    </div>
                 </div>
 
-                <div class="range-wrapper">
+                <div class="control-group">
                     <div class="range-header">
-                        <span>Rank (k) Approximation</span>
-                        <span id="k-value-display">{{ k_value or 50 }}</span>
+                        <label>Compression Rank (k)</label>
+                        <span class="k-value-badge" id="k-value-display">{{ k_value or 50 }}</span>
                     </div>
-                    <input type="range" name="k" min="1" max="200" value="{{ k_value or 50 }}"
-                        oninput="document.getElementById('k-value-display').innerText = this.value">
-                    <div
-                        style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.75rem; line-height: 1.5; text-align: center; background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 0.25rem;">
-                        <strong>What is k?</strong> 'k' controls the amount of detail kept. <br>
-                        Low k = General shapes only (Small Size). <br>
-                        High k = Fine details included (Better Quality).
+
+                    <div class="slider-container">
+                        <input type="range" name="k" min="5" max="200" value="{{ k_value or 50 }}"
+                            oninput="updateKValue(this.value)">
+                        <div class="slider-track-fill"></div>
+                    </div>
+
+                    <div class="info-pill">
+                        <span class="info-icon">ℹ️</span>
+                        <span>Start strictly at <strong>50</strong> for best balance</span>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-primary">Compress Image</button>
+                <button type="submit" class="btn-glow">
+                    <span>Initialize Compression</span>
+                    <div class="btn-particles"></div>
+                </button>
             </form>
         </div>
 
         {% if stats %}
-        <div class="glass-panel">
-            <div class="results-grid">
+        <div class="results-section glass-panel">
+            <div class="comparison-grid">
                 <!-- Original -->
-                <div class="image-card">
+                <div class="image-wrapper original">
                     <div class="image-header">
-                        <h3>Original</h3>
-                        <span class="badge">{{ stats.original_size_str }}</span>
+                        <span class="label">Input Source</span>
+                        <span class="meta-tag">{{ stats.original_size_str }}</span>
                     </div>
-                    <div class="img-container">
-                        <img src="{{ original_image }}" alt="Original Image">
+                    <div class="viewport">
+                        <img src="{{ original_image }}" alt="Original">
                     </div>
                 </div>
 
                 <!-- Compressed -->
-                <div class="image-card">
+                <div class="image-wrapper compressed">
                     <div class="image-header">
-                        <h3>Compressed (k={{ stats.k }})</h3>
-                        <span class="badge">{{ stats.compressed_size_str }}</span>
+                        <span class="label">SVD Output</span>
+                        <span class="meta-tag highlight">{{ stats.compressed_size_str }}</span>
                     </div>
-                    <div class="img-container">
-                        <img src="{{ compressed_image }}" alt="Compressed Image">
+                    <div class="viewport">
+                        <img src="{{ compressed_image }}" alt="Compressed">
                     </div>
                 </div>
             </div>
 
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-value">{{ stats.compression_percentage }}%</div>
-                    <div class="stat-label">File Size Reduction</div>
+            <div class="metrics-dashboard">
+                <div class="metric-card">
+                    <span class="metric-label">Reduction</span>
+                    <span class="metric-value discount">-{{ stats.compression_percentage }}%</span>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value">{{ stats.frobenius_error }}</div>
-                    <div class="stat-label">Frobenius Norm Error</div>
+                <div class="metric-card">
+                    <span class="metric-label">F-Norm Error</span>
+                    <span class="metric-value">{{ stats.frobenius_error }}</span>
                 </div>
-                <!-- <div class="stat-item">
-                    <div class="stat-value">{{ stats.k }}</div>
-                    <div class="stat-label">Singular Values Used</div>
-                </div> -->
+                <div class="metric-card">
+                    <span class="metric-label">Rank Used</span>
+                    <span class="metric-value">k={{ stats.k }}</span>
+                </div>
             </div>
         </div>
         {% endif %}
 
-        <footer style="margin-top: 3rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
-            Built with Flask, NumPy & Linear Algebra
+        <footer class="footer">
+            <div class="footer-content">
+                <p class="footer-tech">Engineered with <strong>Flask</strong> + <strong>NumPy</strong></p>
+                <p class="footer-credit">Designed & Built by <a href="https://www.instagram.com/aryan.skid/"
+                        target="_blank" rel="noopener noreferrer"><span class="highlight">Aryan</span></a></p>
+            </div>
         </footer>
     </div>
+
+    <script>
+        function updateFileName(input) {
+            const display = document.getElementById('file-name-display');
+            if (input.files && input.files[0]) {
+                display.innerText = input.files[0].name;
+                display.classList.add('visible');
+            }
+        }
+
+        function updateKValue(val) {
+            document.getElementById('k-value-display').innerText = val;
+        }
+    </script>
 </body>
 
 </html>
